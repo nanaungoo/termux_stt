@@ -47,11 +47,32 @@ echo ""
 
 # 4. Copy libvosk.so to project root
 echo "[3/5] Copying libvosk.so..."
-if [ -f "libs/$LIB_DIR/libvosk.so" ]; then
-    cp "libs/$LIB_DIR/libvosk.so" .
-    echo "libvosk.so copied."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+echo "Script directory: $SCRIPT_DIR"
+echo "Looking for library at: $SCRIPT_DIR/libs/$LIB_DIR/libvosk.so"
+
+# Check what's in the libs directory
+if [ -d "$SCRIPT_DIR/libs" ]; then
+    echo "Available library directories:"
+    ls -la "$SCRIPT_DIR/libs/"
+else
+    echo "ERROR: libs/ directory not found in $SCRIPT_DIR"
+    exit 1
+fi
+
+if [ -f "$SCRIPT_DIR/libs/$LIB_DIR/libvosk.so" ]; then
+    cp "$SCRIPT_DIR/libs/$LIB_DIR/libvosk.so" .
+    echo "libvosk.so copied successfully."
 else
     echo "ERROR: libs/$LIB_DIR/libvosk.so not found!"
+    echo ""
+    echo "Troubleshooting:"
+    echo "1. Make sure you cloned the entire repository (including libs/ directory)"
+    echo "2. Check if the library file exists: ls -la libs/$LIB_DIR/"
+    echo "3. If missing, you may need to download libvosk.so from the Vosk releases page"
+    echo ""
+    echo "Available architectures in libs/:"
+    ls libs/ 2>/dev/null || echo "  (libs/ directory not found)"
     exit 1
 fi
 echo ""
