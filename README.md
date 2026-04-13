@@ -24,13 +24,21 @@ Follow the detailed instructions in `termux_setup.md` to prepare your Termux env
 
 ## Usage
 
-1.  Ensure the Vosk model is downloaded and placed in the project directory (as instructed in `termux_setup.md`).
-2.  Run the compiled executable:
+1.  Ensure the Vosk model is downloaded and placed in the project directory (the application will offer to download it automatically on the first run).
+2.  Run the application:
+    *   **Real-time transcription (Microphone)**:
+        ```bash
+        ./target/debug/termux_stt record
+        ```
+        (Or simply `./target/debug/termux_stt` as it defaults to record)
+    *   **File transcription**:
+        ```bash
+        ./target/debug/termux_stt transcribe path/to/audio.mp3
+        ```
+3.  For more options, use the help command:
     ```bash
-    ./target/debug/termux_stt
+    ./target/debug/termux_stt --help
     ```
-3.  The application will start recording audio and print the transcription to the console.
-4.  Press `Ctrl+C` to stop the recording.
 
 ## Troubleshooting
 

@@ -29,23 +29,23 @@ This project provides a high-performance, offline speech-to-text system for Andr
 ## 🛠️ Usage Modes
 
 ### 1. Real-time Transcription (Microphone)
-Simply run the program without any arguments:
+Run the program with the `record` command (or no arguments):
 ```bash
-./target/release/termux_stt
+./target/release/termux_stt record
 ```
-*   **Controls**: Press **Enter** to start recording.
 *   **Feedback**: You will see **Partial Results** as you speak.
 *   **Stopping**: Press **Ctrl+C** or stop the recording from your Android notification tray.
 
 ### 2. File Transcription (MP3/WAV)
-To transcribe an existing audio file and generate subtitles:
+To transcribe an existing audio file:
 ```bash
-./target/release/termux_stt path/to/your/audio.mp3
+./target/release/termux_stt transcribe path/to/your/audio.mp3
 ```
-*   **Supported Formats**: `.mp3`, `.wav`.
-*   **Output**: The program will automatically generate two files in the same directory:
-    *   `audio.txt`: The full plain-text transcript.
-    *   `audio.srt`: A subtitle file with word-level timestamps.
+*   **Options**: Use `-o` or `--output` to specify a custom output base name.
+*   **Supported Formats**: `.mp3`, `.wav`, and other formats supported by `symphonia`.
+*   **Output**: The program generates:
+    *   `<output>.txt`: Plain-text transcript.
+    *   `<output>.srt`: Subtitle file with timestamps.
 
 ---
 

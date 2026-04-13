@@ -1,11 +1,31 @@
 [package]
 name = "termux_stt"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
+# Audio & STT
 vosk = "0.3.1"
 hound = "3.5.1"
-anyhow = "1.0"
 symphonia = { version = "0.5", features = ["mp3", "wav"] }
+
+# CLI & UX
+clap = { version = "4.4", features = ["derive"] }
+miette = { version = "5.10", features = ["fancy"] }
+thiserror = "1.0"
+indicatif = "0.17"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Core & Data
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+config = "0.14"
+
+[profile.release]
+opt-level = 3        # Maximum speed optimization
+lto = "thin"         # Link-Time Optimization
+codegen-units = 1    # Better inlining
+strip = "symbols"    # Smaller binary
+panic = "abort"      # Smaller binary (Mobile optimized)
