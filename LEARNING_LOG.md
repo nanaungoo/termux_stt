@@ -24,3 +24,18 @@
 - **Transcribe File:** `cargo run -- transcribe <path_to_audio>`
 - **Record Mode (Termux):** `cargo run -- record`
 - **Help Menu:** `cargo run -- --help`
+
+## [2026-04-13] Senior Rust Architect Standards & UX Refinement
+### Learning Moment
+- **English:** Transitioning to Rust 2024 and using `miette` for diagnostic reporting is like upgrading from a basic toolkit to a professional workstation. Instead of generic "something went wrong" messages, we now provide rich, actionable error reports that guide the user to a solution. Using `indicatif` for progress bars transforms a "black box" operation into a transparent experience, giving the user real-time feedback on long-running tasks.
+- **Myanmar:** Rust 2024 သို့ ကူးပြောင်းခြင်းနှင့် `miette` ကို အသုံးပြု၍ အမှားရှာဖွေခြင်း (Diagnostics) သည် သာမန်ကိရိယာများမှ ကျွမ်းကျင်အဆင့်သုံး workstation တစ်ခုသို့ အဆင့်မြှင့်တင်လိုက်သလိုမျိုး ဖြစ်ပါသည်။ "တစ်ခုခု မှားယွင်းနေသည်" ဟုသာ ပြမည့်အစား အမှားကို မည်သို့ ဖြေရှင်းရမည်ဆိုသည့် အကြံပြုချက်များအထိ အသေးစိတ် ဖော်ပြပေးနိုင်ပါသည်။ `indicatif` ကို အသုံးပြု၍ Progress Bar များ ထည့်သွင်းခြင်းသည် ပိတ်ထားသော အခန်းထဲ၌ အလုပ်လုပ်နေသည်ကို အပြင်မှ မြင်သာအောင် ပြတင်းပေါက် ဖွင့်ပေးလိုက်သလိုမျိုး ဖြစ်ပါသည်။ ၎င်းသည် အသုံးပြုသူအား လုပ်ငန်းစဉ်၏ အခြေအနေကို အချိန်နှင့်တပြေးညီ သိရှိစေပါသည်။
+
+### Command Explanations
+- **Run Tests with Makefile:** `make test` (Automates LD_LIBRARY_PATH and runs all unit tests).
+- **Build with Release Profile:** `cargo build --release` (Optimized for speed and smaller binary size).
+- **Clean Build Artifacts:** `make clean` (Clears target directory to resolve build conflicts).
+
+### Architecture Decisions
+- **Zero `unwrap()` Policy:** Enforced total error propagation in library modules to ensure the application never crashes unexpectedly.
+- **Asynchronous Process Handling:** Leveraged `tokio::process` for the microphone stream to keep the async runtime responsive on Android/Termux.
+- **Makefile Automation:** Created a unified entry point for building and testing that automatically detects system architecture and sets shared library paths.

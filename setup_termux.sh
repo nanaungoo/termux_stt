@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Termux Setup Script for Rust Speech-to-Text System
+# Termux Setup Script for Rust Speech-to-Text System (Rust 2024)
 # Run this script on your Termux device after cloning the repo
 
 set -e
 
-echo "=== Termux STT Setup ==="
+echo "=== Termux STT Setup (Senior Rust Architect Standards) ==="
 echo ""
 
 # 1. Install dependencies
-echo "[1/5] Installing dependencies..."
+echo "[1/5] Installing dependencies (including make)..."
 pkg update -y && pkg upgrade -y
-pkg install termux-api rust wget unzip -y
+pkg install termux-api rust wget unzip make -y
 echo "Dependencies installed."
 echo ""
 
@@ -26,53 +26,29 @@ ARCH=$(uname -m)
 echo "[2/5] Detecting architecture: $ARCH"
 case "$ARCH" in
     aarch64|arm64)
-        LIB_DIR="aarch64"
+        LIB_ARCH="aarch64"
         ;;
     armv7l|armv8l|arm)
-        LIB_DIR="armv7"
+        LIB_ARCH="armv7"
         ;;
     x86_64)
-        LIB_DIR="x86_64"
-        ;;
-    x86|i686)
-        LIB_DIR="x86"
+        LIB_ARCH="x86_64"
         ;;
     *)
         echo "ERROR: Unsupported architecture: $ARCH"
         exit 1
         ;;
 esac
-echo "Using library: libs/$LIB_DIR/libvosk.so"
+echo "Target architecture identified as: $LIB_ARCH"
 echo ""
 
-# 4. Copy libvosk.so to project root
-echo "[3/5] Copying libvosk.so..."
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-echo "Script directory: $SCRIPT_DIR"
-echo "Looking for library at: $SCRIPT_DIR/libs/$LIB_DIR/libvosk.so"
-
-# Check what's in the libs directory
-if [ -d "$SCRIPT_DIR/libs" ]; then
-    echo "Available library directories:"
-    ls -la "$SCRIPT_DIR/libs/"
+# 4. Verify library existence in libs/
+echo "[3/5] Verifying libvosk.so..."
+if [ -f "libs/$LIB_ARCH/libvosk.so" ]; then
+    echo "Found libvosk.so for $LIB_ARCH."
 else
-    echo "ERROR: libs/ directory not found in $SCRIPT_DIR"
-    exit 1
-fi
-
-if [ -f "$SCRIPT_DIR/libs/$LIB_DIR/libvosk.so" ]; then
-    cp "$SCRIPT_DIR/libs/$LIB_DIR/libvosk.so" .
-    echo "libvosk.so copied successfully."
-else
-    echo "ERROR: libs/$LIB_DIR/libvosk.so not found!"
-    echo ""
-    echo "Troubleshooting:"
-    echo "1. Make sure you cloned the entire repository (including libs/ directory)"
-    echo "2. Check if the library file exists: ls -la libs/$LIB_DIR/"
-    echo "3. If missing, you may need to download libvosk.so from the Vosk releases page"
-    echo ""
-    echo "Available architectures in libs/:"
-    ls libs/ 2>/dev/null || echo "  (libs/ directory not found)"
+    echo "ERROR: libs/$LIB_ARCH/libvosk.so not found!"
+    echo "Please ensure you have the full repository with pre-compiled libraries."
     exit 1
 fi
 echo ""
@@ -81,8 +57,8 @@ echo ""
 echo "[4/5] Checking Vosk model..."
 MODEL_DIR="vosk-model-small-en-us-0.15"
 if [ ! -d "$MODEL_DIR" ]; then
-    echo "Downloading Vosk model (this may take a while)..."
-    wget https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
+    echo "Downloading Vosk model (English small)..."
+    wget -c https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
     unzip vosk-model-small-en-us-0.15.zip
     rm vosk-model-small-en-us-0.15.zip
     echo "Model downloaded and extracted."
@@ -91,19 +67,19 @@ else
 fi
 echo ""
 
-# 6. Set LD_LIBRARY_PATH and build
-echo "[5/5] Building application..."
-export LD_LIBRARY_PATH="$PROJECT_DIR"
-cargo build --release
+# 6. Build using Makefile
+echo "[5/5] Building application with Makefile..."
+make build
 
 echo ""
 echo "=== Setup Complete! ==="
 echo ""
 echo "To run the application:"
 echo "  cd $PROJECT_DIR"
-echo "  export LD_LIBRARY_PATH=\$(pwd)"
-echo "  ./target/release/termux_stt"
+echo "  make run"
 echo ""
-echo "Or add this to your ~/.bashrc to set LD_LIBRARY_PATH automatically:"
-echo "  export LD_LIBRARY_PATH=$PROJECT_DIR:\$LD_LIBRARY_PATH"
+echo "To run unit tests:"
+echo "  make test"
+echo ""
+echo "Note: The Makefile automatically handles LD_LIBRARY_PATH for you."
 echo ""

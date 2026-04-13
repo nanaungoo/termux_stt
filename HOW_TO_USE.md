@@ -1,80 +1,90 @@
-# How to Use: Termux Speech-to-Text System
+# How to Use: Termux Speech-to-Text System (Rust 2024)
 
-This project provides a high-performance, offline speech-to-text system for Android (via Termux) using Rust and the Vosk toolkit.
+This project provides a high-performance, offline speech-to-text system for Android (via Termux) and Linux (Ubuntu) using Rust 2024 and the Vosk toolkit.
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Automated with Makefile)
 
-1.  **Install Prerequisites in Termux**:
-    ```bash
-    pkg update && pkg upgrade
-    pkg install termux-api rust wget unzip -y
-    ```
-    *Ensure you have the [Termux:API app](https://f-droid.org/packages/com.termux.api/) installed from F-Droid.*
+1.  **Install Prerequisites**:
+    - **Termux**: `pkg update && pkg install termux-api rust wget unzip make -y`
+    - **Ubuntu**: `sudo apt update && sudo apt install build-essential rustc cargo wget unzip make -y`
+    *Note: For Termux, ensure the [Termux:API app](https://f-droid.org/packages/com.termux.api/) is installed.*
 
 2.  **Clone and Build**:
     ```bash
     git clone <your-repo-url>
     cd termux_stt
-    cargo build --release
+    make build
     ```
 
 3.  **Run the Application**:
     ```bash
-    ./target/release/termux_stt
+    make run
     ```
-    *The program will automatically ask to download the English Vosk model on its first run if it's missing.*
+    *The program will automatically prompt to download the English Vosk model on its first run if it's missing.*
 
 ---
 
 ## 🛠️ Usage Modes
 
 ### 1. Real-time Transcription (Microphone)
-Run the program with the `record` command (or no arguments):
+Run the program with the `record` command (default mode):
 ```bash
-./target/release/termux_stt record
+./target/debug/termux_stt record
 ```
-*   **Feedback**: You will see **Partial Results** as you speak.
-*   **Stopping**: Press **Ctrl+C** or stop the recording from your Android notification tray.
+- **Platform Support**: Real-time recording is currently optimized for **Termux** using `termux-microphone-record`.
+- **Feedback**: You will see **Partial Results** as you speak.
+- **Stopping**: Press **Ctrl+C** to stop.
 
 ### 2. File Transcription (MP3/WAV)
 To transcribe an existing audio file:
 ```bash
-./target/release/termux_stt transcribe path/to/your/audio.mp3
+./target/debug/termux_stt transcribe path/to/audio.mp3
 ```
-*   **Options**: Use `-o` or `--output` to specify a custom output base name.
-*   **Supported Formats**: `.mp3`, `.wav`, and other formats supported by `symphonia`.
-*   **Output**: The program generates:
-    *   `<output>.txt`: Plain-text transcript.
-    *   `<output>.srt`: Subtitle file with timestamps.
+- **UX**: A visual **Progress Bar** will show the processing status.
+- **Output**: Generates `<file>.txt` (plain text) and `<file>.srt` (subtitles with timestamps).
+- **Options**: Use `-o <name>` to specify a custom output filename.
 
 ---
 
-## 📂 Project Structure & Libraries
+## 🧪 Testing & Development
 
-*   **`libs/`**: Contains pre-compiled `libvosk.so` for different architectures (`aarch64`, `armv7`, `x86_64`).
-*   **`build.rs`**: Automatically detects your device architecture and links the correct library during compilation.
-*   **Vosk Model**: The application expects the model in `./vosk-model-small-en-us-0.15/`.
+We use a `Makefile` to handle the complexity of linking shared libraries (`libvosk.so`) across different architectures.
+
+**Run All Tests**:
+```bash
+make test
+```
+*This command automatically sets the correct `LD_LIBRARY_PATH` for your system architecture (x86_64, aarch64, or armv7).*
+
+**Clean Build Artifacts**:
+```bash
+make clean
+```
 
 ---
 
-## 📱 Cross-Compilation (Building on PC for Android)
+## 📂 Project Architecture
 
-If you prefer building on a powerful PC for your phone:
+- **`src/lib.rs`**: Core library entry point (No `unwrap()` allowed here).
+- **`src/core.rs`**: STT engine logic and file processing with progress bars.
+- **`src/cli.rs`**: Command-line argument definitions (Clap v4).
+- **`src/error.rs`**: Rich diagnostic error types using `miette` and `thiserror`.
+- **`libs/`**: Pre-compiled Vosk libraries for cross-platform support.
 
-1.  Add the Android target:
-    ```bash
-    rustup target add aarch64-linux-android
-    ```
-2.  Build using the target (requires Android NDK):
-    ```bash
-    cargo build --release --target aarch64-linux-android
-    ```
-3.  Copy the resulting binary from `target/aarch64-linux-android/release/termux_stt` to your phone.
+---
+
+## 📱 Cross-Compilation (Building for Android)
+
+If you are building on a Linux PC for a Termux target:
+1.  Add the target: `rustup target add aarch64-linux-android`
+2.  Build: `cargo build --release --target aarch64-linux-android`
+3.  The binary will be in `target/aarch64-linux-android/release/termux_stt`.
 
 ---
 
 ## ❓ Troubleshooting
 
-*   **`termux-api not found`**: Ensure you ran `pkg install termux-api` AND have the Termux:API helper app installed from F-Droid/Play Store.
-*   **Permission Denied**: Grant Microphone permissions to the Termux:API app in your Android system settings.
-*   **Library Not Found**: The `build.rs` handles linking, but if you move the binary, ensure `libvosk.so` for your architecture is in the same folder or in your `LD_LIBRARY_PATH`.
+- **Library Not Found**: If running manually without `make`, ensure you set your library path:
+  `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/libs/x86_64` (adjust for your arch).
+- **Permission Denied (Termux)**: Ensure you have granted microphone permissions to the Termux:API app.
+- **Invalid ELF Header**: Ensure your system's dynamic linker is compatible with the pre-compiled libraries in `libs/`.

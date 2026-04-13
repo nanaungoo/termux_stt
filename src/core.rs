@@ -79,7 +79,8 @@ pub fn transcribe_file(recognizer: &mut Recognizer, path: &str) -> Result<Vec<Ow
         .progress_chars("#>-"));
 
     while let Ok(packet) = format.next_packet() {
-        pb.set_position(packet.pos());
+        // Update progress bar position by packet size.
+        pb.inc(packet.data.len() as u64);
         
         let decoded = decoder.decode(&packet)
             .map_err(|e| SttError::AudioFormat(e.to_string()))?;
@@ -220,6 +221,57 @@ fn format_timestamp(seconds: f64) -> String {
     let s = (seconds % 60.0).floor() as u32;
     let ms = ((seconds.fract() * 1000.0).round()) as u32;
     format!("{:02}:{:02}:{:02},{:03}", h, m, s, ms)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_format_timestamp() {
+        assert_eq!(format_timestamp(0.0), "00:00:00,000");
+        assert_eq!(format_timestamp(1.5), "00:00:01,500");
+        assert_eq!(format_timestamp(3661.123), "01:01:01,123");
+    }
+
+    #[test]
+    fn test_save_text() -> Result<()> {
+        let results = vec![
+            OwnedResult { text: "Hello world".to_string(), result: vec![] },
+            OwnedResult { text: "Testing STT".to_string(), result: vec![] },
+        ];
+        let path = "test_output.txt";
+        save_text(&results, path)?;
+        
+        let content = fs::read_to_string(path).map_err(SttError::Io)?;
+        assert_eq!(content, "Hello world\nTesting STT\n");
+        
+        fs::remove_file(path).map_err(SttError::Io)?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_save_srt() -> Result<()> {
+        let results = vec![
+            OwnedResult {
+                text: "Hello".to_string(),
+                result: vec![
+                    OwnedWord { start: 0.0, end: 1.0, word: "Hello".to_string() }
+                ],
+            },
+        ];
+        let path = "test_output.srt";
+        save_srt(&results, path)?;
+        
+        let content = fs::read_to_string(path).map_err(SttError::Io)?;
+        assert!(content.contains("1"));
+        assert!(content.contains("00:00:00,000 --> 00:00:01,000"));
+        assert!(content.contains("Hello"));
+        
+        fs::remove_file(path).map_err(SttError::Io)?;
+        Ok(())
+    }
 }
 
 pub async fn download_model() -> Result<()> {
