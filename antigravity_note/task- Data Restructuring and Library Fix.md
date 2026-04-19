@@ -1,0 +1,3 @@
+- [x] Update default paths in `src/config.rs`
+- [x] Create symlink for `liblog.so` in `libs/x86_64`
+- [x] Verify fix with `make run`

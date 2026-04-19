@@ -1,0 +1,14 @@
+/target
+/audio.wav
+/vosk-model-*
+/libvosk.so
+/*.zip
+/arm64-v8a
+/armeabi-v7a
+/x86
+/x86_64
+models/*/
+models/*.zip
+models/*/
+models/*.zip
+mymemory.db
