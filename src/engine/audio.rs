@@ -13,17 +13,19 @@ use symphonia::core::probe::Hint;
 use std::process::Command;
 
 pub fn convert_video_to_mp3(input_path: &str, output_path: &str) -> Result<()> {
-    println!("🎬 Video detected. Extracting audio using ffmpeg...");
+    println!("🎬 Processing media using optimized ffmpeg settings...");
+    // Using user-provided optimized settings for Vosk: 16000Hz, Mono, 16-bit PCM
     let status = Command::new("ffmpeg")
         .arg("-i")
         .arg(input_path)
-        .arg("-vn") // No video
-        .arg("-acodec")
-        .arg("libmp3lame")
-        .arg("-ab")
-        .arg("192k")
         .arg("-ar")
-        .arg("44100")
+        .arg("16000")
+        .arg("-ac")
+        .arg("1")
+        .arg("-f")
+        .arg("wav") // Using wav container for better compatibility with symphonia
+        .arg("-acodec")
+        .arg("pcm_s16le")
         .arg("-y") // Overwrite
         .arg(output_path)
         .status()
@@ -31,10 +33,10 @@ pub fn convert_video_to_mp3(input_path: &str, output_path: &str) -> Result<()> {
 
     if !status.success() {
         return Err(SttError::ExternalCommand(
-            "ffmpeg failed to convert video to mp3".to_string(),
+            "ffmpeg failed to convert media".to_string(),
         ));
     }
-    println!("✅ Audio extraction complete: {}", output_path);
+    println!("✅ Conversion complete: {}", output_path);
     Ok(())
 }
 
