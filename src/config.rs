@@ -18,7 +18,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            model_path: "./models/vosk-model-small-en-us-0.15".to_string(),
+            model_path: "./models/vosk-model-en-us-0.22".to_string(),
             models_dir: "./models".to_string(),
             sample_rate: 16000.0,
             input_dir: "data/input".to_string(),

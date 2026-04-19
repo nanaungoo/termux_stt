@@ -80,9 +80,11 @@ fi
 
 EXISTING_MODELS_AFTER=(models/*/)
 if [ ${#EXISTING_MODELS_AFTER[@]} -eq 0 ]; then
-    echo "Downloading default English model..."
-    wget -c https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip -O models/en-us.zip
-    unzip models/en-us.zip -d models/ && rm models/en-us.zip
+    echo "Downloading High-Quality English model (Large - 0.22)..."
+    echo "This may take a while (~1.8GB)..."
+    wget -c https://alphacephei.com/vosk/models/vosk-model-en-us-0.22.zip -O models/en-us-large.zip
+    unzip models/en-us-large.zip -d models/ && rm models/en-us-large.zip
+    echo "✅ High-Quality model ready."
 fi
 echo ""
 

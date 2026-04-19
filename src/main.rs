@@ -25,7 +25,7 @@ async fn main() -> miette::Result<()> {
     std::fs::create_dir_all(&input_dir).into_diagnostic()?;
     std::fs::create_dir_all(&output_dir).into_diagnostic()?;
 
-    let mut model_path_str = if cli.model != "./vosk-model-small-en-us-0.15" {
+    let mut model_path_str = if cli.model != "./vosk-model-en-us-0.22" {
         cli.model.clone()
     } else {
         config.model_path.clone()

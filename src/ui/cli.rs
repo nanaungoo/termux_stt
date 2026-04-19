@@ -8,7 +8,7 @@ pub struct Cli {
     pub command: Option<Commands>,
 
     /// Path to the Vosk model
-    #[arg(short, long, default_value = "./vosk-model-small-en-us-0.15")]
+    #[arg(short, long, default_value = "./vosk-model-en-us-0.22")]
     pub model: String,
 
     /// Directory to search for input files if a partial path is given

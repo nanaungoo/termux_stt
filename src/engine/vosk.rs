@@ -120,10 +120,11 @@ pub async fn stream_from_microphone(_recognizer: &mut Recognizer) -> Result<()> 
 }
 
 pub async fn download_model() -> Result<()> {
-    println!("Downloading Vosk model (English small)...");
+    println!("Downloading Vosk model (English Large - 0.22)...");
+    println!("Note: This is a large file (~1.8GB), please ensure you have enough space.");
     let status = Command::new("wget")
         .arg("-c")
-        .arg("https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip")
+        .arg("https://alphacephei.com/vosk/models/vosk-model-en-us-0.22.zip")
         .status()?;
     if !status.success() {
         return Err(SttError::ExternalCommand(
@@ -131,14 +132,16 @@ pub async fn download_model() -> Result<()> {
         ));
     }
 
+    println!("Extracting model...");
     let status = Command::new("unzip")
         .arg("-o")
-        .arg("vosk-model-small-en-us-0.15.zip")
+        .arg("vosk-model-en-us-0.22.zip")
         .status()?;
     if !status.success() {
         return Err(SttError::ExternalCommand(
             "Failed to unzip model".to_string(),
         ));
     }
+    // Optional: rm vosk-model-en-us-0.22.zip after extraction if desired
     Ok(())
 }
