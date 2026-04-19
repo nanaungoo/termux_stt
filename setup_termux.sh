@@ -15,7 +15,6 @@ echo "[1/7] Fixing potential package conflicts and installing dependencies..."
 pkg uninstall openssl-tool -y || true
 apt --fix-broken install -y || true
 pkg update -y && pkg upgrade -y
-# Removed llama-cpp as translation is no longer required
 pkg install termux-api rust wget unzip make libllvm openssl ca-certificates ffmpeg clang binutils pkg-config -y
 
 echo "✅ Dependencies installed."
@@ -60,29 +59,44 @@ echo ""
 echo "[5/7] Setting up Vosk Language Models..."
 mkdir -p models
 
-BUNDLE_LINK="https://file-share.nannaungoo.workers.dev/file/65edf787-0d1b-4f1a-8f2e-1f7dd1321259?download=true"
-BUNDLE_FILE="models/vosk-models-bundle.zip"
-
 shopt -s nullglob
-EXISTING_MODELS=(models/*/)
+EXISTING_FOLDERS=(models/*/)
+EXISTING_ZIPS=(models/*.zip)
 
-if [ ${#EXISTING_MODELS[@]} -eq 0 ]; then
+if [ ${#EXISTING_FOLDERS[@]} -gt 0 ]; then
+    echo "✅ Existing model folder(s) detected. Skipping download step."
+elif [ ${#EXISTING_ZIPS[@]} -gt 0 ]; then
+    echo "📦 Found zip files in models directory. Extracting instead of downloading..."
+    for f in "${EXISTING_ZIPS[@]}"; do
+        echo "Extracting $f..."
+        unzip -o "$f" -d models/
+    done
+    echo "✅ Extraction complete. Models ready."
+else
+    # Only download if nothing exists
+    echo "No models found. Downloading default English model..."
+    BUNDLE_LINK="https://file-share.nannaungoo.workers.dev/file/65edf787-0d1b-4f1a-8f2e-1f7dd1321259?download=true"
+    BUNDLE_FILE="models/vosk-models-bundle.zip"
+
     echo "Attempting to download bulk models bundle..."
     if wget -c "$BUNDLE_LINK" -O "$BUNDLE_FILE"; then
         FILE_SIZE=$(wc -c <"$BUNDLE_FILE")
         if [ "$FILE_SIZE" -gt 100000 ]; then
             unzip -o "$BUNDLE_FILE" -d models/ && rm "$BUNDLE_FILE"
+            echo "✅ Bulk bundle installed."
         else
+            echo "⚠️ Bundle download invalid. Fetching small default model..."
             rm "$BUNDLE_FILE"
+            wget -c https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip -O models/en-us.zip
+            unzip models/en-us.zip -d models/ && rm models/en-us.zip
+            echo "✅ Default small model installed."
         fi
+    else
+        echo "⚠️ Bundle download failed. Fetching small default model..."
+        wget -c https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip -O models/en-us.zip
+        unzip models/en-us.zip -d models/ && rm models/en-us.zip
+        echo "✅ Default small model installed."
     fi
-fi
-
-EXISTING_MODELS_AFTER=(models/*/)
-if [ ${#EXISTING_MODELS_AFTER[@]} -eq 0 ]; then
-    echo "Downloading default English model..."
-    wget -c https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip -O models/en-us.zip
-    unzip models/en-us.zip -d models/ && rm models/en-us.zip
 fi
 echo ""
 
