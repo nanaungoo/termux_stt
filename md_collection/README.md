@@ -1,11 +1,11 @@
 # Professional Termux STT Pipeline (Rust 2024)
 
-A high-performance, offline Speech-to-Text (STT) system with integrated **Gemini AI Translation** and **Text-to-Speech (TTS)** capabilities. Designed for both **Android (Termux)** and **Ubuntu (Linux)**.
+A high-performance, offline Speech-to-Text (STT) system designed for both **Android (Termux)** and **Ubuntu (Linux)**.
 
 ## ✨ Key Features
 *   **Offline Transcription:** Powered by the Vosk engine for high-speed English recognition.
-*   **AI Translation:** Integrated with Google Gemini API to translate transcribed text to Myanmar (or other languages).
-*   **Voice-to-Voice:** Generates high-quality Myanmar voice output from translated text using Gemini Live or Google TTS.
+*   **Video Support:** Automatic audio extraction from video files (mp4, mkv, avi, etc.) using ffmpeg.
+*   **SRT Generation:** Automatically creates subtitle files (SRT) alongside plain text transcripts.
 *   **Interactive UI:** Modern, menu-driven CLI using `dialoguer`—no need to remember complex commands.
 *   **Modular Architecture:** Cleanly organized codebase for easy maintenance and scaling.
 
@@ -24,13 +24,13 @@ bash setup_termux.sh
 
 ## 📂 Modular Structure
 - `src/engine/`: Core STT and Audio processing logic.
-- `src/services/`: External AI services (Gemini Translation & TTS).
 - `src/ui/`: Interactive menus and CLI definitions.
-- `input/` & `output/`: Organized file management.
+- `data/input/` & `data/output/`: Organized file management.
 
 ## 🛠️ Requirements
-- **Gemini API Key:** Required for Translation and TTS features (place in `.env`).
+- **Vosk Model:** Required for transcription (handled by setup script).
 - **Termux:API:** Required for microphone access on Android.
+- **FFmpeg:** Required for video processing.
 
 ## License
 MIT License. See [LICENSE](LICENSE) for details.

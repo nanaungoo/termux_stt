@@ -13,8 +13,6 @@ pub struct Config {
     pub rpm: usize,
     pub tpm: usize,
     pub rpd: usize,
-    pub offline_mode: bool,
-    pub offline_model_path: String,
 }
 
 impl Default for Config {
@@ -28,8 +26,6 @@ impl Default for Config {
             rpm: 15,
             tpm: 1_000_000,
             rpd: 1_500,
-            offline_mode: false,
-            offline_model_path: "./qwen2.5-1.5b-instruct-q4_k_m.gguf".to_string(),
         }
     }
 }
@@ -58,9 +54,7 @@ impl Config {
             output_dir = \"{}\"\n\
             rpm = {}\n\
             tpm = {}\n\
-            rpd = {}\n\
-            offline_mode = {}\n\
-            offline_model_path = \"{}\"\n",
+            rpd = {}\n",
             self.model_path.replace('\\', "\\\\").replace('"', "\\\""),
             self.models_dir.replace('\\', "\\\\").replace('"', "\\\""),
             self.sample_rate,
@@ -68,9 +62,7 @@ impl Config {
             self.output_dir.replace('\\', "\\\\").replace('"', "\\\""),
             self.rpm,
             self.tpm,
-            self.rpd,
-            self.offline_mode,
-            self.offline_model_path.replace('\\', "\\\\").replace('"', "\\\"")
+            self.rpd
         );
         std::fs::write("config.toml", config_content).map_err(|e| SttError::Config(e.to_string()))?;
         Ok(())

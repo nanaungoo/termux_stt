@@ -1,7 +1,6 @@
 pub mod config;
 pub mod engine;
 pub mod error;
-pub mod services;
 pub mod ui;
 
 // Re-export core types for convenience
