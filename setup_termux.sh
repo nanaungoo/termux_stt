@@ -15,7 +15,6 @@ echo "[1/7] Fixing potential package conflicts and installing dependencies..."
 pkg uninstall openssl-tool -y || true
 apt --fix-broken install -y || true
 pkg update -y && pkg upgrade -y
-# Removed llama-cpp as translation is no longer required
 pkg install termux-api rust wget unzip make libllvm openssl ca-certificates ffmpeg clang binutils pkg-config -y
 
 echo "✅ Dependencies installed."
@@ -60,31 +59,32 @@ echo ""
 echo "[5/7] Setting up Vosk Language Models..."
 mkdir -p models
 
-BUNDLE_LINK="https://file-share.nannaungoo.workers.dev/file/65edf787-0d1b-4f1a-8f2e-1f7dd1321259?download=true"
-BUNDLE_FILE="models/vosk-models-bundle.zip"
-
+# Attempt to find any existing model folders
 shopt -s nullglob
 EXISTING_MODELS=(models/*/)
 
 if [ ${#EXISTING_MODELS[@]} -eq 0 ]; then
-    echo "Attempting to download bulk models bundle..."
-    if wget -c "$BUNDLE_LINK" -O "$BUNDLE_FILE"; then
-        FILE_SIZE=$(wc -c <"$BUNDLE_FILE")
-        if [ "$FILE_SIZE" -gt 100000 ]; then
-            unzip -o "$BUNDLE_FILE" -d models/ && rm "$BUNDLE_FILE"
-        else
-            rm "$BUNDLE_FILE"
-        fi
-    fi
-fi
-
-EXISTING_MODELS_AFTER=(models/*/)
-if [ ${#EXISTING_MODELS_AFTER[@]} -eq 0 ]; then
-    echo "Downloading High-Quality English model (Large - 0.22)..."
-    echo "This may take a while (~1.8GB)..."
-    wget -c https://alphacephei.com/vosk/models/vosk-model-en-us-0.22.zip -O models/en-us-large.zip
-    unzip models/en-us-large.zip -d models/ && rm models/en-us-large.zip
-    echo "✅ High-Quality model ready."
+    echo "No models found. You can choose to download the fast small model or the accurate large model."
+    echo "1) English (Small - Fast - 40MB)"
+    echo "2) English (Large - Highly Accurate - 1.8GB)"
+    read -p "Select a model to download [1/2]: " choice
+    
+    case $choice in
+        2)
+            echo "Downloading English Large Model (0.22)..."
+            echo "This may take a long time depending on your connection (~1.8GB)..."
+            wget -c https://alphacephei.com/vosk/models/vosk-model-en-us-0.22.zip -O models/en-us-large.zip
+            unzip models/en-us-large.zip -d models/ && rm models/en-us-large.zip
+            ;;
+        *)
+            echo "Downloading English Small Model (0.15)..."
+            wget -c https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip -O models/en-us-small.zip
+            unzip models/en-us-small.zip -d models/ && rm models/en-us-small.zip
+            ;;
+    esac
+    echo "✅ Model ready."
+else
+    echo "✅ Existing models detected in models/ directory."
 fi
 echo ""
 

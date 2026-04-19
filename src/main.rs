@@ -55,11 +55,28 @@ async fn main() -> miette::Result<()> {
                         .collect();
                     
                     if available_models.is_empty() {
-                        println!("⚠️ No Vosk models found in {}. Downloading default English model...", config.models_dir);
-                        download_model().await.into_diagnostic()?;
-                        available_models.push("vosk-model-small-en-us-0.15".to_string());
+                        println!("⚠️ No Vosk models found. Please download one.");
+                        let download_options = &[
+                            "English (Small - Fast - 40MB)",
+                            "English (Large - Highly Accurate - 1.8GB)",
+                            "Back"
+                        ];
+                        let d_idx = Select::with_theme(&ColorfulTheme::default())
+                            .with_prompt("Choose a model to download")
+                            .items(&download_options[..])
+                            .interact()
+                            .into_diagnostic()?;
+                        
+                        match d_idx {
+                            0 => download_model("vosk-model-small-en-us-0.15", "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip").await.into_diagnostic()?,
+                            1 => download_model("vosk-model-en-us-0.22", "https://alphacephei.com/vosk/models/vosk-model-en-us-0.22.zip").await.into_diagnostic()?,
+                            _ => continue,
+                        }
+                        // Refresh models list
+                        continue;
                     }
 
+                    available_models.push("Download New Model".to_string());
                     available_models.sort();
 
                     let model_idx = Select::with_theme(&ColorfulTheme::default())
@@ -70,6 +87,27 @@ async fn main() -> miette::Result<()> {
                         .into_diagnostic()?;
                     
                     let selected_model_name = &available_models[model_idx];
+                    
+                    if selected_model_name == "Download New Model" {
+                        let download_options = &[
+                            "English (Small - Fast - 40MB)",
+                            "English (Large - Highly Accurate - 1.8GB)",
+                            "Back"
+                        ];
+                        let d_idx = Select::with_theme(&ColorfulTheme::default())
+                            .with_prompt("Choose a model to download")
+                            .items(&download_options[..])
+                            .interact()
+                            .into_diagnostic()?;
+                        
+                        match d_idx {
+                            0 => download_model("vosk-model-small-en-us-0.15", "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip").await.into_diagnostic()?,
+                            1 => download_model("vosk-model-en-us-0.22", "https://alphacephei.com/vosk/models/vosk-model-en-us-0.22.zip").await.into_diagnostic()?,
+                            _ => {},
+                        }
+                        continue;
+                    }
+                    
                     let full_model_path = Path::new(&config.models_dir).join(selected_model_name);
                     model_path_str = full_model_path.to_string_lossy().to_string();
                     

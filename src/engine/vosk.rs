@@ -119,29 +119,43 @@ pub async fn stream_from_microphone(_recognizer: &mut Recognizer) -> Result<()> 
     ))
 }
 
-pub async fn download_model() -> Result<()> {
-    println!("Downloading Vosk model (English Large - 0.22)...");
-    println!("Note: This is a large file (~1.8GB), please ensure you have enough space.");
+pub async fn download_model(name: &str, url: &str) -> Result<()> {
+    println!("Downloading Vosk model: {}...", name);
+    println!("URL: {}", url);
+    println!("Note: If this is a large file, please ensure you have enough space.");
+    
+    let zip_file = format!("{}.zip", name);
+    
     let status = Command::new("wget")
         .arg("-c")
-        .arg("https://alphacephei.com/vosk/models/vosk-model-en-us-0.22.zip")
+        .arg(url)
+        .arg("-O")
+        .arg(&zip_file)
         .status()?;
+        
     if !status.success() {
         return Err(SttError::ExternalCommand(
-            "Failed to download model".to_string(),
+            format!("Failed to download model from {}", url),
         ));
     }
 
-    println!("Extracting model...");
+    println!("Extracting {}...", zip_file);
+    // Unzip into the models directory
     let status = Command::new("unzip")
         .arg("-o")
-        .arg("vosk-model-en-us-0.22.zip")
+        .arg(&zip_file)
+        .arg("-d")
+        .arg("models/")
         .status()?;
+        
     if !status.success() {
         return Err(SttError::ExternalCommand(
-            "Failed to unzip model".to_string(),
+            format!("Failed to unzip {}", zip_file),
         ));
     }
-    // Optional: rm vosk-model-en-us-0.22.zip after extraction if desired
+    
+    // Cleanup zip
+    let _ = std::fs::remove_file(&zip_file);
+    
     Ok(())
 }
