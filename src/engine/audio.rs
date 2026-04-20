@@ -13,8 +13,14 @@ use symphonia::core::probe::Hint;
 use std::process::Command;
 
 pub fn ensure_wav_format(input_path: &str, output_path: &str) -> Result<()> {
-    println!("🎬 Processing media using optimized ffmpeg settings...");
-    // Using user-provided optimized settings for Vosk: 16000Hz, Mono, 16-bit PCM
+    println!("🎬 Converting {} to optimized WAV (16kHz, Mono, PCM)...", input_path);
+    
+    // Optimized ffmpeg flags:
+    // -ar 16000: Set sample rate to 16kHz (Vosk standard)
+    // -ac 1: Convert to Mono
+    // -c:a pcm_s16le: Force 16-bit Little Endian PCM (Required for most STT)
+    // -map_metadata -1: Strip metadata to prevent demuxer "junk" errors
+    // -fflags +bitexact: Ensure a clean, standard header
     let status = Command::new("ffmpeg")
         .arg("-i")
         .arg(input_path)
@@ -22,10 +28,12 @@ pub fn ensure_wav_format(input_path: &str, output_path: &str) -> Result<()> {
         .arg("16000")
         .arg("-ac")
         .arg("1")
-        .arg("-f")
-        .arg("wav") 
-        .arg("-acodec")
+        .arg("-c:a")
         .arg("pcm_s16le")
+        .arg("-map_metadata")
+        .arg("-1")
+        .arg("-fflags")
+        .arg("+bitexact")
         .arg("-y") // Overwrite
         .arg(output_path)
         .status()
@@ -33,10 +41,10 @@ pub fn ensure_wav_format(input_path: &str, output_path: &str) -> Result<()> {
 
     if !status.success() {
         return Err(SttError::ExternalCommand(
-            "ffmpeg failed to convert media".to_string(),
+            format!("ffmpeg failed to convert media: {}", input_path),
         ));
     }
-    println!("✅ Conversion complete: {}", output_path);
+    println!("✅ Optimized WAV created: {}", output_path);
     Ok(())
 }
 

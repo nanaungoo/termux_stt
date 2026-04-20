@@ -157,27 +157,33 @@ async fn main() -> miette::Result<()> {
                 return Err(miette::miette!("Input file not found: {:?}", input_path));
             }
 
+            // 1. Prepare Paths
             let base_name = output.as_deref().unwrap_or_else(|| {
                 input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("output")
             });
 
-            // Automatic Video/Audio to optimized WAV conversion
-            let mut final_input_path = input_path.clone();
-            let ext = input_path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
-            if ext != "wav" {
-                let wav_path = input_path.with_extension("wav");
-                ensure_wav_format(input_path.to_str().unwrap(), wav_path.to_str().unwrap()).into_diagnostic()?;
-                final_input_path = wav_path;
-            }
+            // 2. Optimized Audio Pre-processing
+            // We force conversion to a standard format (16kHz, Mono, PCM)
+            // to avoid sample rate mismatches and "junk" metadata errors.
+            let optimized_wav_path = Path::new(&output_dir).join(format!("{}_optimized.wav", base_name));
+            
+            ensure_wav_format(
+                input_path.to_str().ok_or_else(|| miette::miette!("Invalid input path"))?, 
+                optimized_wav_path.to_str().ok_or_else(|| miette::miette!("Invalid output path"))?
+            ).into_diagnostic()?;
 
             let txt_path = Path::new(&output_dir).join(format!("{}.txt", base_name));
             let srt_path = Path::new(&output_dir).join(format!("{}.srt", base_name));
 
-            println!("🚀 Transcribing file: {:?}...", final_input_path);
-            let results = transcribe_file(&engine, final_input_path.to_str().unwrap()).into_diagnostic()?;
+            println!("🚀 Transcribing optimized audio...");
+            let results = transcribe_file(&engine, optimized_wav_path.to_str().unwrap()).into_diagnostic()?;
             
             save_text(&results, txt_path.to_str().unwrap()).into_diagnostic()?;
             save_srt(&results, srt_path.to_str().unwrap()).into_diagnostic()?;
+            
+            // Optional: Clean up optimized file if you don't want to keep it
+            // std::fs::remove_file(optimized_wav_path).into_diagnostic()?;
+
             println!("\n✅ Done! Results saved to {:?} and {:?}", txt_path, srt_path);
         }
         Commands::Record => {
