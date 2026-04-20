@@ -143,7 +143,31 @@ async fn main() -> miette::Result<()> {
                         .into_diagnostic()?;
 
                     if file_selection == files.len() - 1 { continue; }
-                    break Commands::Transcribe { file: files[file_selection].clone(), output: None };
+                    let selected_file = files[file_selection].clone();
+                    
+                    let default_output_name = Path::new(&selected_file)
+                        .file_stem()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("output")
+                        .to_string();
+
+                    let output_base_name: String = dialoguer::Input::with_theme(&ColorfulTheme::default())
+                        .with_prompt("Enter output filename (base name)")
+                        .default(default_output_name)
+                        .interact_text()
+                        .into_diagnostic()?;
+
+                    let selected_output_dir: String = dialoguer::Input::with_theme(&ColorfulTheme::default())
+                        .with_prompt("Enter output directory")
+                        .default(output_dir.clone())
+                        .interact_text()
+                        .into_diagnostic()?;
+
+                    break Commands::Transcribe { 
+                        file: selected_file, 
+                        output: Some(output_base_name),
+                        out_dir: Some(selected_output_dir)
+                    };
                 }
                 1 => break Commands::Record,
                 2 => {
@@ -184,7 +208,7 @@ async fn main() -> miette::Result<()> {
     let engine = SttEngine::new(&model_path_str).into_diagnostic()?;
 
     match command {
-        Commands::Transcribe { file, output } => {
+        Commands::Transcribe { file, output, out_dir } => {
             let input_path = if Path::new(&file).exists() {
                 Path::new(&file).to_path_buf()
             } else {
@@ -195,6 +219,9 @@ async fn main() -> miette::Result<()> {
                 return Err(miette::miette!("Input file not found: {:?}", input_path));
             }
 
+            let current_output_dir = out_dir.unwrap_or(output_dir);
+            std::fs::create_dir_all(&current_output_dir).into_diagnostic()?;
+
             // 1. Prepare Paths
             let base_name = output.as_deref().unwrap_or_else(|| {
                 input_path.file_stem().and_then(|s| s.to_str()).unwrap_or("output")
@@ -203,15 +230,15 @@ async fn main() -> miette::Result<()> {
             // 2. Optimized Audio Pre-processing
             // We force conversion to a standard format (16kHz, Mono, PCM)
             // to avoid sample rate mismatches and "junk" metadata errors.
-            let optimized_wav_path = Path::new(&output_dir).join(format!("{}_optimized.wav", base_name));
+            let optimized_wav_path = Path::new(&current_output_dir).join(format!("{}_optimized.wav", base_name));
             
             ensure_wav_format(
                 input_path.to_str().ok_or_else(|| miette::miette!("Invalid input path"))?, 
                 optimized_wav_path.to_str().ok_or_else(|| miette::miette!("Invalid output path"))?
             ).into_diagnostic()?;
 
-            let txt_path = Path::new(&output_dir).join(format!("{}.txt", base_name));
-            let srt_path = Path::new(&output_dir).join(format!("{}.srt", base_name));
+            let txt_path = Path::new(&current_output_dir).join(format!("{}.txt", base_name));
+            let srt_path = Path::new(&current_output_dir).join(format!("{}.srt", base_name));
 
             println!("🚀 Transcribing optimized audio...");
             let results = transcribe_file(&engine, optimized_wav_path.to_str().unwrap()).into_diagnostic()?;

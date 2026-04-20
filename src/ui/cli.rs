@@ -29,6 +29,9 @@ pub enum Commands {
         /// Output base name (default: same as input)
         #[arg(short, long)]
         output: Option<String>,
+        /// Custom output directory for this task
+        #[arg(long)]
+        out_dir: Option<String>,
     },
     /// Real-time transcription from microphone (Termux only)
     Record,
