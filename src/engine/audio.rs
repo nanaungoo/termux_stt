@@ -12,7 +12,7 @@ use symphonia::core::probe::Hint;
 
 use std::process::Command;
 
-pub fn convert_video_to_mp3(input_path: &str, output_path: &str) -> Result<()> {
+pub fn ensure_wav_format(input_path: &str, output_path: &str) -> Result<()> {
     println!("🎬 Processing media using optimized ffmpeg settings...");
     // Using user-provided optimized settings for Vosk: 16000Hz, Mono, 16-bit PCM
     let status = Command::new("ffmpeg")
@@ -23,7 +23,7 @@ pub fn convert_video_to_mp3(input_path: &str, output_path: &str) -> Result<()> {
         .arg("-ac")
         .arg("1")
         .arg("-f")
-        .arg("wav") // Using wav container for better compatibility with symphonia
+        .arg("wav") 
         .arg("-acodec")
         .arg("pcm_s16le")
         .arg("-y") // Overwrite
@@ -48,10 +48,10 @@ pub fn transcribe_file(engine: &SttEngine, path: &str) -> Result<Vec<OwnedResult
     let mss = MediaSourceStream::new(Box::new(file), Default::default());
 
     let mut hint = Hint::new();
-    if path.ends_with(".mp3") {
+    let lower_path = path.to_lowercase();
+    if lower_path.ends_with(".mp3") {
         hint.with_extension("mp3");
-    }
-    if path.ends_with(".wav") {
+    } else if lower_path.ends_with(".wav") {
         hint.with_extension("wav");
     }
 
