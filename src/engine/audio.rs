@@ -12,18 +12,28 @@ use symphonia::core::probe::Hint;
 
 use std::process::Command;
 
-pub fn convert_video_to_mp3(input_path: &str, output_path: &str) -> Result<()> {
-    println!("🎬 Video detected. Extracting audio using ffmpeg...");
+pub fn ensure_wav_format(input_path: &str, output_path: &str) -> Result<()> {
+    println!("🎬 Converting {} to optimized WAV (16kHz, Mono, PCM)...", input_path);
+    
+    // Optimized ffmpeg flags:
+    // -ar 16000: Set sample rate to 16kHz (Vosk standard)
+    // -ac 1: Convert to Mono
+    // -c:a pcm_s16le: Force 16-bit Little Endian PCM (Required for most STT)
+    // -map_metadata -1: Strip metadata to prevent demuxer "junk" errors
+    // -fflags +bitexact: Ensure a clean, standard header
     let status = Command::new("ffmpeg")
         .arg("-i")
         .arg(input_path)
-        .arg("-vn") // No video
-        .arg("-acodec")
-        .arg("libmp3lame")
-        .arg("-ab")
-        .arg("192k")
         .arg("-ar")
-        .arg("44100")
+        .arg("16000")
+        .arg("-ac")
+        .arg("1")
+        .arg("-c:a")
+        .arg("pcm_s16le")
+        .arg("-map_metadata")
+        .arg("-1")
+        .arg("-fflags")
+        .arg("+bitexact")
         .arg("-y") // Overwrite
         .arg(output_path)
         .status()
@@ -31,10 +41,10 @@ pub fn convert_video_to_mp3(input_path: &str, output_path: &str) -> Result<()> {
 
     if !status.success() {
         return Err(SttError::ExternalCommand(
-            "ffmpeg failed to convert video to mp3".to_string(),
+            format!("ffmpeg failed to convert media: {}", input_path),
         ));
     }
-    println!("✅ Audio extraction complete: {}", output_path);
+    println!("✅ Optimized WAV created: {}", output_path);
     Ok(())
 }
 
@@ -46,10 +56,10 @@ pub fn transcribe_file(engine: &SttEngine, path: &str) -> Result<Vec<OwnedResult
     let mss = MediaSourceStream::new(Box::new(file), Default::default());
 
     let mut hint = Hint::new();
-    if path.ends_with(".mp3") {
+    let lower_path = path.to_lowercase();
+    if lower_path.ends_with(".mp3") {
         hint.with_extension("mp3");
-    }
-    if path.ends_with(".wav") {
+    } else if lower_path.ends_with(".wav") {
         hint.with_extension("wav");
     }
 
